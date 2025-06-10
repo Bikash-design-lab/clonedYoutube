@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>YouTube Clone</title>
+    <style>
+
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900 font-sans">
+    <header class="flex items-center justify-between px-6 py-4 bg-white shadow-md sticky top-0 z-10">
+        <div class="flex items-center space-x-4">
+            <img id="youtubeLogo" class="w-24" src="./Images/youtubeLogo.jpg" alt="YouTube Logo" />
+            <div id="LogToHome">Home</div>
+
+        </div>
+        <form id="searchForm" class="flex w-full max-w-md">
+            <input id="searchInput" class="flex-grow rounded-l-full border border-gray-300 px-4 py-2 focus:outline-none"
+                type="text" placeholder="Search YouTube..." />
+            <button class="rounded-r-full bg-red-500 text-white px-5 py-2 hover:bg-red-600 transition-colors"
+                type="submit">🔍</button>
+        </form>
+
+    </header>
+
+    <main id="video-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
+    </main>
+    <script>
+        // const API_KEY = "AIzaSyC0y_YOAvPOqRafSDsEyIsyYcSqK129Uvk";
+        // const API_KEY = "AIzaSyCSyhDA636wxbh5l0aTwnrjriCJ3jPGbdc"
+        const API_KEY = "AIzaSyCzIdVeyZgp3HC3gN8cHn1gmUnoBEIwKN4"
+        async function fetchVideosByQuery(query) {
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=50&type=video`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.items || [];
+        }
+
+        function displayVideos(videos) {
+            const container = document.getElementById('video-container');
+            container.innerHTML = '';
+
+            videos.forEach(video => {
+                const videoId = video.id?.videoId;
+                if (!videoId) return;
+
+                const { title, description, thumbnails, channelTitle } = video.snippet;
+
+                const videoCard = document.createElement('div');
+                videoCard.className =
+                    "bg-white rounded-xl overflow-hidden shadow hover:shadow-xl transition-all duration-300";
+
+                videoCard.innerHTML = `
+                    <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
+                        <img class="w-full h-48 object-cover" src="${thumbnails?.medium?.url || ''}" alt="${title}">
+                        <div class="p-4">
+                            <h3 class="text-base font-semibold mb-1 truncate" title="${title}">${title}</h3>
+                            <p class="text-sm text-gray-700 line-clamp-2 mb-2">${description || 'No description.'}</p>
+                            <span class="text-xs text-gray-500">Channel: ${channelTitle}</span>
+                        </div>
+                    </a>
+                `;
+
+                container.appendChild(videoCard);
+            });
+        }
+
+        document.getElementById('searchForm').addEventListener('input', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+            const videos = await fetchVideosByQuery(query);
+            displayVideos(videos);
+        });
+
+        // Initial load
+        fetchVideosByQuery("coding tutorials").then(displayVideos);
+    </script>
+
+</body>
+
+</html>
